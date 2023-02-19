@@ -31,64 +31,62 @@ void algorithm(int dep[Rd][Cd], int pro[Rp][Cp]) {
     Output: Prints assignments of programmers to departments
     */
 	int dpref[5] = {0,0,0,0,0}; //my array for department preferences, 0 means I haven't found that preference yet
-    int whichProgrammer;
-    int confArray[5];
-    //dep[i][0];
+    int whichProgrammer;    //keeps track of which programmer I am choosing
+    int confArray[5];   //conflict array, is used to find which departments have programmer conflicts, so my programmer can choose from those options
+    bool cont, conflict;    //two bools I use
+    //readability space
 	for (int i = 0; i < Rd; i++) {  //going to run once for each department, by end of each loop iteration I will add the correct programmer to dpref
 	    if (dpref[i] != 0) {    //found this correct programmer in an earlier loop, don't run this loop
-	        continue;
-	    }
-	    bool conflict = false;
-	    for (int k = 0; k < 5; k++) {
-	        confArray[k] = 0;
-	    }
-	    confArray[i] = 1;
-	    for (int k = i+1; k < Rd; k++) {   //goes over the all the departments past the current one (as the previous ones have their programmers) and finds if there is a conflict
-	        if (dep[i][0] == dep[k][0]) {
-	            conflict = true;
-	            confArray[k] = 1;
-	        }
-	    }
-	    whichProgrammer = dep[i][0];    //number of programmer, starts at 1
-	    if (conflict) {
-	        for (int k = 0; k < Cp; k++) {  //checks programmer's preference
-	            int on = pro[whichProgrammer - 1][k];   //on is which department the programmer wants
-	            if (confArray[on - 1] == 1) {   //if the programmer and the department want the person
-	                dpref[on - 1] = whichProgrammer;    //then set that department in dpref to this programmer
-	                break;
-	            } 
-	        
-	        }
-	    }
-	    else {
+	        continue;   //go to next i
+	    }   //end if
+	    conflict = false;  //start with no conflict
+	    for (int k = 0; k < 5; k++) {   //make my conflict array full of 0's
+	        confArray[k] = 0;   //set each index to 0
+	    }   //end for loop
+	    confArray[i] = 1;   //the current department set to 1 as I don't check it in my conflict loop
+	    for (int k = i+1; k < Rd; k++) {   //goes over the all the departments past the current one (as the previous ones have their programmers) and finds if there is a conflict - doesn't check previous departments
+	        if (dep[i][0] == dep[k][0]) {   //use index 0 as only one I need to check, as I move already assigned programmers to the end
+	            conflict = true;    //found a conflict
+	            confArray[k] = 1;   //note in conflict array
+	        }   //end if
+	    }   //end for loop
+	    whichProgrammer = dep[i][0];    //number of programmer, starts at 1.  If I use as an index need to subtract 1
+	    if (conflict) { //conflict found earlier
+	        for (int k = 0; k < Cp; k++) {  //checks programmer's preference, starting with the first one
+	            int on = pro[whichProgrammer - 1][k];   //on is which department the programmer wants, 1 through 5, if used as index need to subtract 1
+	            if (confArray[on - 1] == 1) {   //check the conflict array, since I am starting at the programmer's first preference whichever one I find first this programmer will be hired for.
+	                dpref[on - 1] = whichProgrammer;    //then set that department in dpref to this programmer, use on-1 as it's an index
+	                break;  //since I made dpref correct, end for loop.  This might set a different department than the i I am on, so later I will check and redo loop if needed
+	            }   //end if
+	        }   //end for
+	    }   //end if
+	    else {  //no conflict
 	        dpref[i] = dep[i][0];   //no conflict, so first choice is correct choice
-	    }
+	    }   //end else
 	    clearFoundProgrammer(dep, whichProgrammer);  //moves whichever Programmer I am on to the end of everybody's list, since I use index 0 for the next programmer choice
-
-
-	    
-	    bool cont = false;
+	    //readability space
+	    cont = false;  //start with not continuing, as it is easier to say cont = true and break
 	    for (int k = 0; k < 5; k++) {   //check if confArray is full
-	        if (confArray[k] == 0) {
-	            cont = true;
-	        }
-	    }
-	    if (!(cont)) {
-	        break;
-	    }
+	        if (confArray[k] == 0) {    //found a department with no programmer
+	            cont = true;    //continue towards the next i
+	            break;  //leave this for loop
+	        }   //end if
+	    }   //end for loop
+	    if (!(cont)) {  //don't continue, leave this for loop and print out which programmer went to each department
+	        break;  //leave for loop
+	    }   //end if
 	    if (dpref[i] == 0) {    //filled a different department, so need to try this one again
-	        i--;
-	    }
-	}
-	
+	        i--;    //redo this i, since i++ at end of loop
+	    }   //end if
+	}   //end for loop
 	//output
-	for(int i = 1; i < 6; i++) {
-	    printf("Department #%d will get Programmer #%d\n", i, dpref[i-1]);
-	}
-}
-int main() {
-    int departments[Rd][Cd];
-    int programmers[Rp][Cp];
+	for(int i = 1; i < 6; i++) {    //start at department 1, end at department 5
+	    printf("Department #%d will get Programmer #%d\n", i, dpref[i-1]);  //print output as directed
+	}   //end for
+}   //end algorithm
+int main() {    //start main, read in from file then call algorithm
+    int departments[Rd][Cd];    //size as directed in assignment description
+    int programmers[Rp][Cp];    //if differenct size, just need to change constants
 	FILE* fp = fopen("matching-data.txt", "r+");  //opens a file, reading
 	if (fp == NULL) {   //invalid file or didn't find file
 		printf("Please check your file again.\n");  //error catch
@@ -103,5 +101,5 @@ int main() {
 	}   //end for loop
 
 	printf("EECS 348 Lab #EC1 Jesse DeBok\n");    //Header text
-    algorithm(departments, programmers);
-}
+    algorithm(departments, programmers);    //call algorithm with the two arrays
+}   //end main
